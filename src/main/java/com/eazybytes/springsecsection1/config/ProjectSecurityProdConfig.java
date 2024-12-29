@@ -1,5 +1,6 @@
 package com.eazybytes.springsecsection1.config;
 
+import com.eazybytes.springsecsection1.exceptionhandling.CustomAccessDeniedHandler;
 import com.eazybytes.springsecsection1.exceptionhandling.CustomBasicAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,16 +20,21 @@ public class ProjectSecurityProdConfig {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.requiresChannel(rcc-> rcc.anyRequest().requiresSecure());
+        http.sessionManagement(smc->smc.invalidSessionUrl("/invalidSession")
+                        .maximumSessions(1).maxSessionsPreventsLogin(true))
+        .requiresChannel(rcc-> rcc.anyRequest().requiresSecure());
         //http.authorizeHttpRequests((requests) -> requests.anyRequest().permitAll());
         http.csrf(CsrfConfigurer -> CsrfConfigurer.disable()).
                 authorizeHttpRequests((requests) -> requests.
                 requestMatchers("/myAccount","/myBalance","/myLoans","/myCards").authenticated().
-                requestMatchers("/notices","/contact","/error","/register").permitAll());
+                requestMatchers("/notices","/contact","/error","/register","/invalidSession").permitAll());
         http.formLogin(withDefaults());
         http.httpBasic(hbc->hbc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()));
+        //http.exceptionHandling(ehc->ehc.
+          //      authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()));
+
         http.exceptionHandling(ehc->ehc.
-                authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()));
+                accessDeniedHandler(new CustomAccessDeniedHandler()));
         return http.build();
     }
 
