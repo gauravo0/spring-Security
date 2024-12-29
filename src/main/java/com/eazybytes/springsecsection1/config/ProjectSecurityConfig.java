@@ -1,5 +1,6 @@
 package com.eazybytes.springsecsection1.config;
 
+import com.eazybytes.springsecsection1.exceptionhandling.CustomBasicAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -22,14 +23,16 @@ public class ProjectSecurityConfig {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-       // http.requiresChannel(rcc-> rcc.anyRequest().requiresSecure());
+      // http.requiresChannel(rcc-> rcc.anyRequest().requiresSecure());
         //http.authorizeHttpRequests((requests) -> requests.anyRequest().permitAll());
         http.csrf(CsrfConfigurer -> CsrfConfigurer.disable()).
                 authorizeHttpRequests((requests) -> requests.
                 requestMatchers("/myAccount","/myBalance","/myLoans","/myCards").authenticated().
                 requestMatchers("/notices","/contact","/error","/register").permitAll());
         http.formLogin(withDefaults());
-        http.httpBasic(withDefaults());
+        http.httpBasic(hbc->hbc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()));
+        http.exceptionHandling(ehc->ehc.
+                authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()));
         return http.build();
     }
 
